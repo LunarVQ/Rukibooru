@@ -1,0 +1,12 @@
+# local database and media storage dir
+data/
+../data/
+
+# external source code dir
+szurubooru/
+
+# local environment files
+*.env
+.env
+.idea/
+.DS_Store

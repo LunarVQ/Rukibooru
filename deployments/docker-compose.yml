@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: booru_db
+    environment:
+      POSTGRES_USER: szurubooru
+      POSTGRES_PASSWORD: mylocalpassword123
+      POSTGRES_DB: szurubooru
+    volumes:
+      - ../data/pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U szurubooru"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  szurubooru:
+    image: szurubooru/server:latest
+    container_name: booru_app
+    ports:
+      - "8080:80"
+    environment:
+      - DB_TYPE=postgres
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=szurubooru
+      - DB_PASSWORD=mylocalpassword123
+      - DB_NAME=szurubooru
+      - SECRET_KEY=macminicustomsecretkey999
+    volumes:
+      - ../data/assets:/data
+    depends_on:
+      postgres:
+        condition: service_healthy
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    restart: unless-stopped
