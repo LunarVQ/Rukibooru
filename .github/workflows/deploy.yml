@@ -5,8 +5,7 @@ on:
     branches: [ "main" ]
 
 jobs:
-  audit-and-deploy:
-    # Tells GitHub to execute these steps natively on your Mac Mini's hardware
+  build-and-deploy:
     runs-on: self-hosted
     
     steps:
