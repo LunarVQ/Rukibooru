@@ -1,0 +1,36 @@
+name: Rukibooru Deployment Pipeline
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  audit-and-deploy:
+    # Tells GitHub to execute these steps natively on your Mac Mini's hardware
+    runs-on: self-hosted
+    
+    steps:
+    - name: Checkout Code Repository
+      uses: actions/checkout@v4
+
+    - name: Audit Go Code Integrity
+      run: |
+        go fmt ./...
+        go vet ./...
+
+    - name: Compile Native Apple Silicon Binary
+      run: |
+        mkdir -p build
+        GOOS=darwin GOARCH=arm64 go build -o build/rukibooru-daemon cmd/orchestrator/main.go
+
+    - name: Hardware Boundary Safety Check
+      run: |
+        # Verifies the wired USB data connection to the Pixel 1 is active before restarting services
+        if ! adb devices | grep -q "device$"; then
+          echo "CRITICAL: Physical Pixel 1 Link Unreachable via Dock Controller Hub!"
+          exit 1
+        fi
+
+    - name: Sync Container Configuration State
+      run: |
+        docker compose -f deployments/docker-compose.yml up -d --remove-orphans
